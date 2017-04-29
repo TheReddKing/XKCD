@@ -1,3 +1,4 @@
+#LINEAR SVM
 import numpy as np
 from sklearn.pipeline import Pipeline
 from sklearn.feature_extraction.text import CountVectorizer
@@ -10,6 +11,7 @@ from nltk.tokenize import sent_tokenize, word_tokenize
 from nltk.stem import WordNetLemmatizer
 from sklearn.externals import joblib
 from sortedcontainers import SortedSet
+from sklearn.linear_model import SGDClassifier
 import pickle
 import pdb
 
@@ -24,12 +26,12 @@ import csv
 
 train = []
 
-with open('2015above_clean.csv') as f:
-    train.extend([line for line in csv.reader(f)])
+# with open('2015above_clean.csv') as f:
+#     train.extend([line for line in csv.reader(f)])
 with open('2014_clean.csv') as f:
     train.extend([line for line in csv.reader(f)])
-with open('2013_clean.csv') as f:
-    train.extend([line for line in csv.reader(f)])
+# with open('2013_clean.csv') as f:
+#     train.extend([line for line in csv.reader(f)])
 # with open('2016_03_clean.csv') as f:
 #     train.extend([line for line in csv.reader(f)])
 # with open('2016_04_clean.csv') as f:
@@ -47,9 +49,7 @@ count_vect.fit(X_train)
 #Order y_train results alphabetically
 y_map = SortedSet(y_train)
 
-# Multiple passes to make stuff better. Lol This shouldn't be the case
-X_train = X_train * 5
-y_train = y_train * 5
+#epochs automatically added :P
 X_train_counts = count_vect.transform(X_train)
 print X_train_counts.shape
 
@@ -58,12 +58,17 @@ print X_train_counts.shape
 X_train_tfidf = X_train_counts
 
 # print y_train.shape
-clf = MultinomialNB().fit(X_train_tfidf, y_train)
+clf = SGDClassifier(loss='log', penalty='l2',
+                                           alpha=3e-4, n_iter=5, random_state=42).fit(X_train_tfidf, y_train)
 
-docs_new = ['yo mama is fat',"she sells seashells by the seashore. the shells she sells are surely seashells. so if she sells shells on the seashore, i'm sure she sells seashore shells.","testing i am wearing an orange hoodie"] #,'little bobby tables','little','bobby','tables','drop table','drop me','phone call table']
+docs_new = ['ocean',"bobby","drop tables","phone call", "phones","terrible story"] #,'little bobby tables','little','bobby','tables','drop table','drop me','phone call table']
 X_new_counts = count_vect.transform(docs_new)
 # X_new_tfidf = tfidf_transformer.transform(X_new_counts)
 X_new_tfidf = X_new_counts
+
+predictPure = clf.predict(X_new_tfidf)
+for doc, category in zip(docs_new, predictPure):
+    print('%r => %s' % (doc, category))
 
 predicted = clf.predict_proba(X_new_tfidf)
 

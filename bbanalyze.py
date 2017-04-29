@@ -26,8 +26,8 @@ import csv
 
 train = []
 
-# with open('2015above_clean.csv') as f:
-#     train.extend([line for line in csv.reader(f)])
+with open('2015above_clean.csv') as f:
+    train.extend([line for line in csv.reader(f)])
 with open('2014_clean.csv') as f:
     train.extend([line for line in csv.reader(f)])
 # with open('2013_clean.csv') as f:
@@ -43,8 +43,9 @@ y_train = [x[1] for x in train]
 
 # Multiple passes to make stuff better.
 # count_vect = CountVectorizer()
-count_vect = CountVectorizer(tokenizer=LemmaTokenizer(),max_features=100000,max_df=.5)
-count_vect.fit(X_train)
+# count_vect = CountVectorizer(tokenizer=LemmaTokenizer(),max_features=100000,max_df=.5)
+# count_vect.fit(X_train)
+count_vect = CountVectorizer(tokenizer=LemmaTokenizer(),vocabulary=joblib.load('model8_vocabulary.pkl'))
 
 #Order y_train results alphabetically
 y_map = SortedSet(y_train)
@@ -53,15 +54,15 @@ y_map = SortedSet(y_train)
 X_train_counts = count_vect.transform(X_train)
 print X_train_counts.shape
 
-# tfidf_transformer = TfidfTransformer()
-# X_train_tfidf = tfidf_transformer.fit_transform(X_train_counts)
-X_train_tfidf = X_train_counts
+tfidf_transformer = TfidfTransformer()
+X_train_tfidf = tfidf_transformer.fit_transform(X_train_counts)
+# X_train_tfidf = X_train_counts
 
 # print y_train.shape
-clf = SGDClassifier(loss='log', penalty='l2',
-                                           alpha=3e-4, n_iter=5, random_state=42).fit(X_train_tfidf, y_train)
+clf = SGDClassifier(loss='modified_huber', penalty='l2',
+                                           alpha=6e-4, n_iter=10,n_jobs=4, random_state=42).fit(X_train_tfidf, y_train)
 
-docs_new = ['ocean',"bobby","drop tables","phone call", "phones","terrible story"] #,'little bobby tables','little','bobby','tables','drop table','drop me','phone call table']
+docs_new = ['ocean',"bobby","drop tables","phone call", "phones","terrible story","don't tell me jokes","jokes are bad for you","not dead"] #,'little bobby tables','little','bobby','tables','drop table','drop me','phone call table']
 X_new_counts = count_vect.transform(docs_new)
 # X_new_tfidf = tfidf_transformer.transform(X_new_counts)
 X_new_tfidf = X_new_counts
@@ -71,7 +72,6 @@ for doc, category in zip(docs_new, predictPure):
     print('%r => %s' % (doc, category))
 
 predicted = clf.predict_proba(X_new_tfidf)
-
 for doc, category in zip(docs_new, predicted):
     ind = 0
     for val in category:
@@ -79,7 +79,7 @@ for doc, category in zip(docs_new, predicted):
             print('%r => %s (%i%%)' % (doc, y_map[ind],int(val*100)))
         ind += 1
 test = []
-with open('2016_01_clean.csv') as f:
+with open('2013_clean.csv') as f:
     test.extend([line for line in csv.reader(f)])
 
 X_test = [x[0] for x in test]

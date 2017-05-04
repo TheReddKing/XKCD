@@ -28,8 +28,8 @@ train = []
 
 with open('2015above_clean.csv') as f:
     train.extend([line for line in csv.reader(f)])
-with open('2014_clean.csv') as f:
-    train.extend([line for line in csv.reader(f)])
+# with open('2014_clean.csv') as f:
+#     train.extend([line for line in csv.reader(f)])
 # with open('2013_clean.csv') as f:
 #     train.extend([line for line in csv.reader(f)])
 # with open('2016_03_clean.csv') as f:
@@ -43,9 +43,9 @@ y_train = [x[1] for x in train]
 
 # Multiple passes to make stuff better.
 # count_vect = CountVectorizer()
-# count_vect = CountVectorizer(tokenizer=LemmaTokenizer(),max_features=100000,max_df=.5)
-# count_vect.fit(X_train)
-count_vect = CountVectorizer(tokenizer=LemmaTokenizer(),vocabulary=joblib.load('model8_vocabulary.pkl'))
+count_vect = CountVectorizer(tokenizer=LemmaTokenizer(),max_features=80000,max_df=.3)
+count_vect.fit(X_train)
+# count_vect = CountVectorizer(tokenizer=LemmaTokenizer(),vocabulary=joblib.load('model8_vocabulary.pkl'))
 
 #Order y_train results alphabetically
 y_map = SortedSet(y_train)
@@ -57,12 +57,12 @@ print X_train_counts.shape
 tfidf_transformer = TfidfTransformer()
 X_train_tfidf = tfidf_transformer.fit_transform(X_train_counts)
 # X_train_tfidf = X_train_counts
-
+print 'Modified Huber with Alpha .0006, 10 iter'
 # print y_train.shape
 clf = SGDClassifier(loss='modified_huber', penalty='l2',
                                            alpha=6e-4, n_iter=10,n_jobs=4, random_state=42).fit(X_train_tfidf, y_train)
 
-docs_new = ['ocean',"bobby","drop tables","phone call", "phones","terrible story","don't tell me jokes","jokes are bad for you","not dead"] #,'little bobby tables','little','bobby','tables','drop table','drop me','phone call table']
+docs_new = ['monty python','liar','history',"president","you lied"] #,'little bobby tables','little','bobby','tables','drop table','drop me','phone call table']
 X_new_counts = count_vect.transform(docs_new)
 # X_new_tfidf = tfidf_transformer.transform(X_new_counts)
 X_new_tfidf = X_new_counts
@@ -74,10 +74,15 @@ for doc, category in zip(docs_new, predictPure):
 predicted = clf.predict_proba(X_new_tfidf)
 for doc, category in zip(docs_new, predicted):
     ind = 0
+    choices = []
     for val in category:
-        if(val > .01):
-            print('%r => %s (%i%%)' % (doc, y_map[ind],int(val*100)))
+        choices.append(y_map[ind])
         ind += 1
+
+    ress = sorted(zip(choices,category), key=lambda prob:prob[1], reverse=True)[:5]
+    for res in ress:
+        print('%r => %s (%i%%)' % (doc, res[0],int(res[1]*100)))
+
 test = []
 with open('2013_clean.csv') as f:
     test.extend([line for line in csv.reader(f)])
@@ -96,11 +101,18 @@ accurate = 0
 predicted = clf.predict_proba(X_test_tfidf)
 for answer, prob in zip(y_test, predicted):
     ind = 0
-    for val in prob:
-        if(val > .01):
-            if(int(y_map[ind]) == int(answer)):
-                accurate += 1
-                break
+    choices = []
+    for val in category:
+        choices.append(y_map[ind])
         ind += 1
+
+    ress = sorted(zip(choices,prob), key=lambda prob:prob[1], reverse=True)[:10]
+    for res in ress:
+        if(int(res[0]) == int(answer)):
+            accurate += 1
+            break
     total += 1
+
 print accurate*100.0/total
+print "Out of top 10"
+print clf.score(X_test_tfidf,y_test)*100.0

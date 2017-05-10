@@ -1,0 +1,8 @@
+http://fastml.com/classifying-text-with-bag-of-words-a-tutorial/
+
+BAAnalyze uses MultinomialNB
+BCanalyze uses SGDClassifier
+RNNAAA uses Neural Network (it's terrible)
+
+parse.py parses CSV text of reddit database.
+Example CSV in 2016_04

@@ -1,8 +1,14 @@
 http://fastml.com/classifying-text-with-bag-of-words-a-tutorial/
+http://scikit-learn.org/stable/tutorial/text_analytics/working_with_text_data.html
+
+This is a "Multiclass Text-Classification problem"
+
+at least this is what i believe the problem can be simplified to.
+
 
 BAAnalyze uses MultinomialNB
-BCanalyze uses SGDClassifier
-RNNAAA uses Neural Network (it's terrible)
+BBanalyze uses SGDClassifier
+RNNAAA uses Neural Network (it's terrible but maybe because i have no clue what i'm doing)
 
-parse.py parses CSV text of reddit database.
+parse.py parses CSV text of reddit database. See my blog for a more in-depth tutorial.
 Example CSV in 2016_04
